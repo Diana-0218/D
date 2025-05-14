@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜品浏览 - 在线点餐系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+            width: 100%;
+        }
+        nav {
+            background-color: #444;
+            padding: 0.5em 0;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        nav a:hover, nav a.active {
+            background-color: #5cb85c;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .search-bar input[type="text"] {
+            padding: 10px;
+            width: 60%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-bar button {
+            padding: 10px 20px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .search-bar button:hover {
+            background-color: #4cae4c;
+        }
+        .dish-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .dish-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            background-color: #fff;
+        }
+        .dish-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .dish-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .dish-item p {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .dish-item .price {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        .dish-item .rating {
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+        .dish-item button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .dish-item button:hover {
+            background-color: #2980b9;
+        }
+        .user-info {
+            text-align: right;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .user-info a {
+            color: #dc3545;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+        .user-info a:hover {
+            text-decoration: underline;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>在线点餐系统</h1>
+    </header>
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="dishes.html" class="active">浏览菜品</a>
+        <a href="profile.html">个人中心</a>
+        <a href="login.html" id="loginLink">登录/注册</a>
+        <a href="#" id="logoutLink" style="display: none;">退出登录</a>
+    </nav>
+
+    <div class="container">
+        <div id="userInfo" class="user-info" style="display: none;">
+            欢迎, <span id="username"></span>!
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <h2>我们的菜品</h2>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索菜品...">
+            <button type="button" id="searchButton">搜索</button>
+        </div>
+
+        <div class="dish-grid" id="dishGrid">
+            <!-- 菜品项将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 在线点餐系统. 保留所有权利.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户是否已登录
+            checkLoginStatus();
+            
+            // 加载菜品数据
+            loadDishes();
+            
+            // 搜索按钮点击事件
+            document.getElementById('searchButton').addEventListener('click', function() {
+                searchDishes();
+            });
+            
+            // 搜索框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchDishes();
+                }
+            });
+            
+            // 退出登录事件
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        });
+        
+        // 检查用户登录状态
+        function checkLoginStatus() {
+            // 从sessionStorage获取用户信息
+            const userJson = sessionStorage.getItem('user');
+            if (userJson) {
+                try {
+                    const user = JSON.parse(userJson);
+                    // 显示用户信息
+                    document.getElementById('username').textContent = user.username;
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('loginLink').style.display = 'none';
+                    document.getElementById('logoutLink').style.display = 'inline';
+                } catch (e) {
+                    console.error('解析用户信息失败:', e);
+                }
+            }
+        }
+        
+        // 加载菜品数据
+        function loadDishes() {
+            fetch('dishes?action=list&format=json') // 明确请求JSON格式
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应不正常');
+                    }
+                    // 尝试解析JSON，如果失败则尝试处理HTML响应
+                    return response.text().then(text => {
+                        try {
+                            // 尝试解析为JSON
+                            return JSON.parse(text);
+                        } catch (e) {
+                            // 如果不是JSON，则返回原始文本
+                            return { text: text, isHtml: true };
+                        }
+                    });
+                })
+                .then(data => {
+                    const dishGrid = document.getElementById('dishGrid');
+                    dishGrid.innerHTML = ''; // 清空现有内容
+                    
+                    // 如果是HTML响应
+                    if (data.isHtml) {
+                        // 从HTML响应中提取菜品数据
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(data.text, 'text/html');
+                        const dishRows = doc.querySelectorAll('table tbody tr');
+                        
+                        if (dishRows.length === 0 || (dishRows.length === 1 && dishRows[0].querySelector('td[colspan]'))) {
+                            // 没有菜品数据
+                            dishGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">暂无菜品信息</p>';
+                            return;
+                        }
+                        
+                        // 遍历菜品行并创建卡片
+                        dishRows.forEach(row => {
+                            if (!row.querySelector('td[colspan]')) { // 跳过"暂无菜品信息"行
+                                const cells = row.querySelectorAll('td');
+                                if (cells.length >= 6) {
+                                    const dishId = cells[0].textContent.trim();
+                                    const dishName = cells[1].textContent.trim();
+                                    const isVegetarian = cells[2].textContent.trim() === '是';
+                                    const windowLocation = cells[3].textContent.trim();
+                                    const price = cells[4].textContent.trim();
+                                    const rating = cells[5].textContent.trim();
+                                    
+                                    createDishCard(dishGrid, dishId, dishName, isVegetarian, windowLocation, price, rating);
+                                }
+                            }
+                        });
+                    } else {
+                        // 处理JSON响应
+                        const dishes = Array.isArray(data) ? data : [];
+                        
+                        if (dishes.length === 0) {
+                            // 没有菜品数据
+                            dishGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">暂无菜品信息</p>';
+                            return;
+                        }
+                        
+                        // 遍历菜品数据并创建卡片
+                        dishes.forEach(dish => {
+                            createDishCard(
+                                dishGrid, 
+                                dish.dishId,
+                                dish.dishName,
+                                dish.vegetarian, // JSON boolean true/false
+                                dish.windowLocation,
+                                dish.price,
+                                (dish.averageRating !== null && typeof dish.averageRating === 'number') ? dish.averageRating.toFixed(1) : '0.0'
+                            );
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('获取菜品数据失败:', error);
+                    showMessage('获取菜品数据失败，请稍后重试', 'error');
+                });
+                
+                // 创建菜品卡片的辅助函数
+                function createDishCard(container, dishId, dishName, isVegetarian, windowLocation, price, rating) {
+                    // 创建菜品卡片
+                    const dishCard = document.createElement('div');
+                    dishCard.className = 'dish-item';
+                    dishCard.innerHTML = `
+                        <h3>${dishName}</h3>
+                        <p>${windowLocation}</p>
+                        <p>${isVegetarian ? '素食' : '荤食'}</p>
+                        <div class="price">¥${price}</div>
+                        <div class="rating">评分: ${rating}</div>
+                        <button class="order-btn" data-id="${dishId}">加入订单</button>
+                    `;
+                    
+                    // 添加到网格
+                    container.appendChild(dishCard);
+                    
+                    // 添加订单按钮点击事件
+                    const orderBtn = dishCard.querySelector('.order-btn');
+                    orderBtn.addEventListener('click', function() {
+                        addToOrder(dishId, dishName, price);
+                    });
+                }
+        }
+        
+        // 搜索菜品
+        function searchDishes() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const dishItems = document.querySelectorAll('.dish-item');
+            
+            if (searchTerm === '') {
+                // 如果搜索词为空，显示所有菜品
+                dishItems.forEach(item => {
+                    item.style.display = 'block';
+                });
+                return;
+            }
+            
+            // 过滤菜品
+            let hasResults = false;
+            dishItems.forEach(item => {
+                const dishName = item.querySelector('h3').textContent.toLowerCase();
+                const windowLocation = item.querySelectorAll('p')[0].textContent.toLowerCase();
+                
+                if (dishName.includes(searchTerm) || windowLocation.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // 显示搜索结果信息
+            if (!hasResults) {
+                showMessage(`没有找到与 "${searchTerm}" 相关的菜品`, 'error');
+            } else {
+                hideMessage();
+            }
+        }
+        
+        // 添加到订单
+        function addToOrder(dishId, dishName, price) {
+            // 检查用户是否登录
+            const userJson = sessionStorage.getItem('user');
+            if (!userJson) {
+                showMessage('请先登录后再添加菜品到订单', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            // 这里可以实现添加到购物车/订单的逻辑
+            // 简单示例：存储到localStorage
+            let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            
+            // 检查是否已经在订单中
+            const existingOrder = orders.find(order => order.dishId === dishId);
+            if (existingOrder) {
+                existingOrder.quantity += 1;
+            } else {
+                orders.push({
+                    dishId: dishId,
+                    dishName: dishName,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            
+            localStorage.setItem('orders', JSON.stringify(orders));
+            showMessage(`已将 ${dishName} 添加到订单`, 'success');
+        }
+        
+        // 退出登录
+        function logout() {
+            // 清除会话存储中的用户信息
+            sessionStorage.removeItem('user');
+            
+            // 发送退出请求到后端
+            fetch('logout')
+                .then(() => {
+                    // 重定向到登录页面
+                    window.location.href = 'login.html';
+                })
+                .catch(error => {
+                    console.error('退出登录失败:', error);
+                    // 即使请求失败，也清除前端状态并重定向
+                    window.location.href = 'login.html';
+                });
+        }
+        
+        // 显示消息
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+        
+        // 隐藏消息
+        function hideMessage() {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

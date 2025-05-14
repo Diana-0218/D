@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 在线点餐系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+            width: 100%;
+        }
+        nav {
+            background-color: #444;
+            padding: 0.5em 0;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        nav a:hover, nav a.active {
+            background-color: #5cb85c;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .profile-section, .orders-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-section h2, .orders-section h2 {
+            color: #333;
+            border-bottom: 2px solid #5cb85c;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .profile-info {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .profile-info .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .profile-info .value {
+            color: #333;
+        }
+        .order-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .order-list th, .order-list td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .order-list th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .order-list tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .order-list .price {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .no-orders {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>在线点餐系统</h1>
+    </header>
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="dishes.html">浏览菜品</a>
+        <a href="profile.html" class="active">个人中心</a>
+        <a href="#" id="logoutLink">退出登录</a>
+    </nav>
+
+    <div class="container">
+        <div id="messageContainer"></div>
+
+        <div class="profile-section">
+            <h2>个人信息</h2>
+            <div class="profile-info">
+                <div class="label">用户名:</div>
+                <div class="value" id="profileUsername"></div>
+                
+                <div class="label">口味偏好:</div>
+                <div class="value" id="profilePreference"></div>
+            </div>
+        </div>
+
+        <div class="orders-section">
+            <h2>我的订单</h2>
+            <div id="orderContainer">
+                <!-- 订单将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 在线点餐系统. 保留所有权利.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户是否已登录
+            checkLoginStatus();
+            
+            // 加载用户信息
+            loadUserProfile();
+            
+            // 加载订单信息
+            loadOrders();
+            
+            // 退出登录事件
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        });
+        
+        // 检查用户登录状态
+        function checkLoginStatus() {
+            // 从sessionStorage获取用户信息
+            const userJson = sessionStorage.getItem('user');
+            if (!userJson) {
+                // 用户未登录，重定向到登录页面
+                showMessage('请先登录后再访问个人中心', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return false;
+            }
+            return true;
+        }
+        
+        // 加载用户个人信息
+        function loadUserProfile() {
+            const userJson = sessionStorage.getItem('user');
+            if (!userJson) return;
+            
+            try {
+                const user = JSON.parse(userJson);
+                document.getElementById('profileUsername').textContent = user.username || '未设置';
+                document.getElementById('profilePreference').textContent = user.preference || '未设置';
+            } catch (e) {
+                console.error('解析用户信息失败:', e);
+                showMessage('加载用户信息失败', 'error');
+            }
+        }
+        
+        // 加载订单信息
+        function loadOrders() {
+            // 从localStorage获取订单信息（实际应用中应该从后端获取）
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const orderContainer = document.getElementById('orderContainer');
+            
+            if (orders.length === 0) {
+                orderContainer.innerHTML = '<div class="no-orders">您还没有订单记录</div>';
+                return;
+            }
+            
+            // 创建订单表格
+            let tableHTML = `
+                <table class="order-list">
+                    <thead>
+                        <tr>
+                            <th>菜品名称</th>
+                            <th>单价</th>
+                            <th>数量</th>
+                            <th>小计</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let totalAmount = 0;
+            
+            orders.forEach(order => {
+                const price = parseFloat(order.price.replace('￥', ''));
+                const subtotal = price * order.quantity;
+                totalAmount += subtotal;
+                
+                tableHTML += `
+                    <tr>
+                        <td>${order.dishName}</td>
+                        <td class="price">${order.price}</td>
+                        <td>${order.quantity}</td>
+                        <td class="price">￥${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align: right; font-weight: bold;">总计:</td>
+                            <td class="price">￥${totalAmount.toFixed(2)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+            
+            orderContainer.innerHTML = tableHTML;
+        }
+        
+        // 退出登录
+        function logout() {
+            // 清除会话存储中的用户信息
+            sessionStorage.removeItem('user');
+            
+            // 发送退出请求到后端
+            fetch('logout')
+                .then(() => {
+                    // 重定向到登录页面
+                    window.location.href = 'login.html';
+                })
+                .catch(error => {
+                    console.error('退出登录失败:', error);
+                    // 即使请求失败，也清除前端状态并重定向
+                    window.location.href = 'login.html';
+                });
+        }
+        
+        // 显示消息
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

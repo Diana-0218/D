@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <display-name>Smart Cafeteria</display-name>
+
+    <!-- Welcome File List -->
+    <welcome-file-list>
+        <welcome-file>login.jsp</welcome-file>  <!-- Redirect root access to login page -->
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <!-- Servlet mappings are handled by annotations (@WebServlet) in this project -->
+    <!-- No need to declare servlets and mappings here unless overriding or for filters/listeners -->
+
+    <!-- Example Filter Configuration (Uncomment and configure if needed) -->
+    <!--
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>com.cafeteria.filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/dishes/*</url-pattern>  <-- Protect dish-related actions -->
+        <!-- Add other protected URL patterns -->
+    <!-- </filter-mapping>
+    -->
+
+    <!-- Session Configuration (Optional) -->
+    <!--
+    <session-config>
+        <session-timeout>30</session-timeout> <!- Session timeout in minutes ->
+    </session-config>
+    -->
+
+</web-app>

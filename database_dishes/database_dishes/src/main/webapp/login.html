@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - 在线点餐系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .login-container button:hover {
+            background-color: #4cae4c;
+        }
+        .login-container .links {
+            margin-top: 15px;
+        }
+        .login-container .links a {
+            color: #5cb85c;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        .login-container .links a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #dc3545;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .success-message {
+            color: #28a745;
+            margin-bottom: 15px;
+            display: none;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>用户登录</h2>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <form id="loginForm" action="login" method="post">
+            <div>
+                <input type="text" name="username" id="username" placeholder="用户名" required>
+            </div>
+            <div>
+                <input type="password" name="password" id="password" placeholder="密码" required>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+        <div class="links">
+            <a href="register.html">没有账户？立即注册</a>
+            <br>
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 在线点餐系统. 保留所有权利.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查URL参数是否有success=true
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                const successMessage = document.getElementById('successMessage');
+                successMessage.textContent = '注册成功，请登录！';
+                successMessage.style.display = 'block';
+            }
+
+            // 检查URL参数是否有error
+            if (urlParams.get('error')) {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = decodeURIComponent(urlParams.get('error'));
+                errorMessage.style.display = 'block';
+            }
+
+            // 表单提交处理
+            const loginForm = document.getElementById('loginForm');
+            loginForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (!username || !password) {
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.textContent = '用户名和密码不能为空';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                // 直接提交表单，不使用fetch API
+                // 由于后端使用的是Servlet处理，我们直接提交表单让服务器处理
+                loginForm.submit();
+                
+                // 注释掉原来的fetch API代码
+                /*
+                fetch('login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        // 登录成功，保存用户信息到sessionStorage
+                        const user = {
+                            username: username,
+                            preference: '' // 后端可能会返回这个信息，这里先设为空
+                        };
+                        sessionStorage.setItem('user', JSON.stringify(user));
+                        
+                        // 重定向到菜品页面
+                        window.location.href = 'dishes.html';
+                    } else {
+                        return response.text().then(html => {
+                            // 检查是否有错误信息
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const errorParam = new URL(window.location.href).searchParams.get('error');
+                            
+                            if (errorParam) {
+                                const errorMessage = document.getElementById('errorMessage');
+                                errorMessage.textContent = decodeURIComponent(errorParam);
+                                errorMessage.style.display = 'block';
+                            } else {
+                                const errorMessage = document.getElementById('errorMessage');
+                                errorMessage.textContent = '登录失败，请检查用户名和密码';
+                                errorMessage.style.display = 'block';
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('登录请求失败:', error);
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.textContent = '登录请求失败，请稍后重试';
+                    errorMessage.style.display = 'block';
+                });
+                */}
+            });
+        });
+    </script>
+</body>
+</html>
